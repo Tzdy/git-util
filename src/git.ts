@@ -30,7 +30,7 @@ export class Git {
       reject: (reason: any) => void
     ) => void
   ): Promise<T>;
-  
+
   private spawn<T>(
     argvs: Array<string>,
     fn?: (
@@ -59,32 +59,25 @@ export class Git {
     });
   }
 
-  public findBranch(page: number, limit: number) {
-    const result: Branch = {
-      branch: [],
-      page,
-      total: 0,
-    };
-    return this.spawn<Branch>(
+  public findBranch() {
+    const result: Array<Branch> = []
+    return this.spawn<Array<Branch>>(
       ["show-ref", "--heads"],
       (data, resolve, reject) => {
         // 可能出现空仓库
         if (data.length !== 0) {
           const array = data.split("\n");
-          array.forEach((item, index) => {
+          array.forEach((item) => {
             if (item) {
-              if (index >= page * limit && index < (page + 1) * limit) {
-                const sub = item.split(" ");
-                const branchName = sub[1].replace(/^refs\/heads\//, "");
-                const latestCommit = sub[0];
-                result.branch.unshift({
-                  name: branchName,
-                  latestCommit,
-                });
-              }
+              const sub = item.split(" ");
+              const branchName = sub[1].replace(/^refs\/heads\//, "");
+              const latestCommit = sub[0];
+              result.unshift({
+                name: branchName,
+                latestCommit,
+              });
             }
           });
-          result.total = array.length;
         }
         resolve(result);
       }
@@ -113,5 +106,7 @@ export class Git {
     );
   }
 
-  // public
+//   public findCommit(page: number, limit: number) {
+//     const;
+//   }
 }
