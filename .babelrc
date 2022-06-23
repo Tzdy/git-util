@@ -1,7 +1,6 @@
 {
   "presets": [
-    ["@babel/preset-env", { "targets": { "node": "current" }}],
-    "@babel/preset-typescript"
+    ["@babel/preset-env", { "targets": { "node": "current" }}]
   ],
   "plugins": [
     "@babel/plugin-transform-typescript",
@@ -14,6 +13,12 @@
           "@": "./src",
           "test": "./test"
         }
-      }]
+      }],
+      // [
+      //   "@babel/plugin-transform-runtime",
+      //   {
+      //     "corejs": { "version": 3 }
+      //   }
+      // ]
   ]
 }

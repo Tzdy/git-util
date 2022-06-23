@@ -1,6 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { join } from "path";
-import { Branch, Head } from "./git.interface";
+import { Branch, Commit, Head, Item } from "./git.interface";
 
 export class Git {
   private repoPath: string;
@@ -60,7 +60,7 @@ export class Git {
   }
 
   public findBranch() {
-    const result: Array<Branch> = []
+    const result: Array<Branch> = [];
     return this.spawn<Array<Branch>>(
       ["show-ref", "--heads"],
       (data, resolve, reject) => {
@@ -106,7 +106,72 @@ export class Git {
     );
   }
 
-//   public findCommit(page: number, limit: number) {
-//     const;
-//   }
+  public findCommit(branchName: string) {
+    return this.spawn<Array<Commit>>(
+      [
+        "log",
+        "--format={@}%cN{@}%ci{@}%h{@}%t{@}%B{@}{end}",
+        "--date=iso8601-strict",
+        branchName,
+      ],
+      (data, resolve, reject) => {
+        const result: Array<Commit> = [];
+        const array = data.split("{end}");
+        array.forEach((item) => {
+          if (item) {
+            /*
+            这个是正则匹配的原始字符串。
+            {@}Tsdy{@}2022-05-30 18:00:30 +0800{@}5d3886b{@}79be2f0{@}merge
+            {@}{end} 
+            */
+            const match = item.match(
+              /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
+            );
+            if (match) {
+              result.push({
+                username: match[1], // 提交者名称
+                time: new Date(match[2]), // 提交时间
+                commitHash: match[3],
+                treeHash: match[4],
+                comment: match[5],
+              });
+            }
+          }
+        });
+        resolve(result);
+      }
+    );
+  }
+
+  public findDiffItems(limit: number) {
+    return this.spawn<Record<string, Array<Item>>>(
+      ["log", "--format={start}%h", "--name-status", `-${limit}`],
+      (data, resolve, reject) => {
+        const map: Record<string, Array<Item>> = {};
+        data
+          .split("{start}")
+          .filter((item) => item)
+          .map((item) => item.split("\n"))
+          .filter((item) => item)
+          .forEach((items) => {
+            items = items.filter((item) => item);
+            const commitHash = items[0];
+            items.slice(1).forEach((str) => {
+              const diffItemArray = str.split("\t");
+              const diffItem = {
+                status: diffItemArray[0],
+                name: diffItemArray[1],
+              };
+              if (diffItem.name) {
+                if (!map[commitHash]) {
+                  map[commitHash] = [];
+                }
+                map[commitHash].push(diffItem);
+              }
+            });
+          });
+        resolve(map);
+      }
+    );
+  }
 }

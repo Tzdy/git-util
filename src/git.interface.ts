@@ -15,3 +15,8 @@ export type Commit = {
     treeHash: string;
     comment: string;
 }
+
+export interface Item {
+    name: string;
+    status: string;
+}
