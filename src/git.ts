@@ -19,6 +19,9 @@ export class Git {
     child.stdout.on("error", (err) => {
       reject(err);
     });
+    child.stderr.on("error", (err) => {
+      reject(err);
+    });
   }
 
   private spawn(argvs: Array<string>): Promise<void>;
@@ -110,7 +113,7 @@ export class Git {
     return this.spawn<Array<Commit>>(
       [
         "log",
-        "--format={@}%cN{@}%ci{@}%h{@}%t{@}%B{@}{end}",
+        "--format={@}%cN{@}%ci{@}%H{@}%T{@}%B{@}{end}",
         "--date=iso8601-strict",
         branchName,
       ],
@@ -171,6 +174,36 @@ export class Git {
             });
           });
         resolve(map);
+      }
+    );
+  }
+
+  public findDiffInfo(commitHash: string) {
+    return this.spawn<any>(
+      ["diff-tree", "-r", "--full-index", "--root", commitHash],
+      (data, resolve, reject) => {
+        console.log(data)
+        data.split("\n").forEach((item) => {
+          if (item[0] === ":") {
+            // const leftFileHash = item.slice(15, 55)
+            const rightFileHash = item.slice(56, 96);
+            const type = item.slice(97, 98);
+            if (type === "D") {
+              return;
+            }
+            // \t 是一个字符 注意了
+            const dotFilename = item.slice(99, item.length);
+            const dotTreeArr = dotFilename.split("/");
+            let dotTreename = ""; // 假如又一个 apple/banana/a.js。需要遍历这个字符串。
+            // 相当于 apple  apple/banana  apple/banana/a.js（最后一个不需要遍历）
+            for (let i = 0; i < dotTreeArr.length - 1; i++) {
+              dotTreename += dotTreeArr[i];
+              console.log(dotTreename);
+              dotTreename += "/";
+            }
+          }
+        });
+        resolve(void 0)
       }
     );
   }
