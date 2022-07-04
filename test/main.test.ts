@@ -63,10 +63,15 @@ test("find commits", async () => {
 })
 
 test('find diffItem', async () => {
-  const result = await git.findDiffItems(4)
-  expect(result).toEqual({
-    b0fd673: [ { status: 'M', name: 'index.html' } ],
-    '71ab32d': [ { status: 'M', name: 'index.html' } ],
-    '858a8ed': [ { status: 'A', name: 'index.html' } ]
-  })
+  const items = await git.findDiffItem('HEAD')
+  expect(items).toEqual([
+    {
+      hash: 'b54d14dd98cf67071749b29e567ef79b52ff3223',
+      commitHash: 'b0fd673786639a413c987121b246d65b3c8f1e7d'
+    },
+    {
+      hash: '4767066f593c489c399873369a73e137ac8a0ff9',
+      commitHash: '71ab32d443c4cb5d0ffeffeda931bea741b4957f'
+    }
+  ])
 })

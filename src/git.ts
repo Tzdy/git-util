@@ -62,6 +62,52 @@ export class Git {
     });
   }
 
+  private spawnPipe<T>(
+    argvsArr: Array<Array<string>>,
+    fn?: (
+      data: string,
+      resolve: (value: T) => void,
+      reject: (reason: any) => void
+    ) => void
+  ) {
+    return new Promise((resolve, reject) => {
+      let data = "";
+      let resultChild: ChildProcessWithoutNullStreams | undefined;
+      function isChildProcess(
+        resultChild: any
+      ): resultChild is ChildProcessWithoutNullStreams {
+        if (argvsArr.length !== 0 && resultChild) {
+          return true;
+        }
+        return false;
+      }
+      argvsArr.forEach((argvs) => {
+        const child = spawn("git", argvs, {
+          cwd: this.repoPath,
+        });
+        this.exception(child, reject);
+        if (resultChild) {
+          resultChild.stdout.pipe(child.stdin);
+        }
+        resultChild = child;
+      });
+
+      if (isChildProcess(resultChild)) {
+        resultChild.stdout.on("data", (buffer) => {
+          data += buffer.toString("utf-8");
+        });
+        resultChild.on("exit", () => {
+          if (fn) {
+            // 由于需要按照\n切割字符串，所以清除最后一个\n
+            fn(data.replace(/\n$/, ""), resolve, reject);
+          } else {
+            resolve(void 0);
+          }
+        });
+      }
+    });
+  }
+
   public findBranch() {
     const result: Array<Branch> = [];
     return this.spawn<Array<Branch>>(
@@ -146,64 +192,40 @@ export class Git {
     );
   }
 
-  public findDiffItems(limit: number) {
-    return this.spawn<Record<string, Array<Item>>>(
-      ["log", "--format={start}%h", "--name-status", `-${limit}`],
+  // 如果有三个新提交，那么limit应该为4
+  public findDiffItem(commitHash: string, limit?: number) {
+    const revListArgvs: string[] = ["rev-list", commitHash];
+    if (limit !== undefined) {
+      revListArgvs.push(`-${limit}`);
+    }
+    return this.spawnPipe<Item[]>(
+      [revListArgvs, ["diff-tree", "--stdin", "-t"]],
       (data, resolve, reject) => {
-        const map: Record<string, Array<Item>> = {};
-        data
-          .split("{start}")
-          .filter((item) => item)
-          .map((item) => item.split("\n"))
-          .filter((item) => item)
-          .forEach((items) => {
-            items = items.filter((item) => item);
-            const commitHash = items[0];
-            items.slice(1).forEach((str) => {
-              const diffItemArray = str.split("\t");
-              const diffItem = {
-                status: diffItemArray[0],
-                name: diffItemArray[1],
-              };
-              if (diffItem.name) {
-                if (!map[commitHash]) {
-                  map[commitHash] = [];
-                }
-                map[commitHash].push(diffItem);
-              }
-            });
-          });
-        resolve(map);
-      }
-    );
-  }
-
-  public findDiffInfo(commitHash: string) {
-    return this.spawn<any>(
-      ["diff-tree", "-r", "--full-index", "--root", commitHash],
-      (data, resolve, reject) => {
-        console.log(data)
+        const items: Array<Item> = [];
+        let commitHash = "";
         data.split("\n").forEach((item) => {
           if (item[0] === ":") {
-            // const leftFileHash = item.slice(15, 55)
             const rightFileHash = item.slice(56, 96);
             const type = item.slice(97, 98);
+            // 删除文件后，右边的hash是000000000......
+            // 但是，如果使用左边的话，就会冲突，因为一定会存在一次添加/修改
+            // 的hash值和删除时相同。
+            // 所以，我们不保存删除的
             if (type === "D") {
               return;
             }
             // \t 是一个字符 注意了
             const dotFilename = item.slice(99, item.length);
-            const dotTreeArr = dotFilename.split("/");
-            let dotTreename = ""; // 假如又一个 apple/banana/a.js。需要遍历这个字符串。
-            // 相当于 apple  apple/banana  apple/banana/a.js（最后一个不需要遍历）
-            for (let i = 0; i < dotTreeArr.length - 1; i++) {
-              dotTreename += dotTreeArr[i];
-              console.log(dotTreename);
-              dotTreename += "/";
-            }
+            const goal = {
+              hash: rightFileHash,
+              commitHash,
+            };
+            items.push(goal);
+          } else {
+            commitHash = item;
           }
         });
-        resolve(void 0)
+        resolve(items);
       }
     );
   }
