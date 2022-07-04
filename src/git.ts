@@ -252,4 +252,10 @@ export class Git {
       }
     );
   }
+
+  public findBlob(blobHash: string) {
+    return this.spawn<string>(['cat-file', '-p', blobHash], (data, resolve, reject) => {
+      resolve(data)
+    })
+  }
 }
