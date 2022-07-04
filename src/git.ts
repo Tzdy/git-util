@@ -215,7 +215,7 @@ export class Git {
               return;
             }
             // \t 是一个字符 注意了
-            const dotFilename = item.slice(99, item.length);
+            // const dotFilename = item.slice(99, item.length);
             const goal = {
               hash: rightFileHash,
               commitHash,
@@ -229,4 +229,6 @@ export class Git {
       }
     );
   }
+
+
 }
