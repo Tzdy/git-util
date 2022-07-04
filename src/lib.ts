@@ -1,6 +1,6 @@
 import { Git } from "./git";
 const git = new Git('/Users/mac/Documents/web/server/gogs/ty-git', 'gitrepo.git')
-git.findDiffItem('HEAD').then(res => {
+git.findTree('HEAD').then(res => {
     console.log(res)
 })
 // git.updateHead('dev')

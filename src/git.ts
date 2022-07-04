@@ -1,6 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { join } from "path";
-import { Branch, Commit, Head, Item } from "./git.interface";
+import { Branch, Commit, Head, Item, TreeItem } from "./git.interface";
 
 export class Git {
   private repoPath: string;
@@ -230,5 +230,26 @@ export class Git {
     );
   }
 
-
+  // 这个hash可以是commitHash和treeHash
+  public findTree(hash: string) {
+    return this.spawn<TreeItem[]>(
+      ["ls-tree", hash],
+      (data, resolve, reject) => {
+        const items: TreeItem[] = [];
+        data.split("\n").forEach((item) => {
+          if (item) {
+            const array = item.split(" ");
+            const hashOrName = array[2].split("\t");
+            const it = {
+              type: array[1] as "blob" | "tree",
+              hash: hashOrName[0],
+              name: hashOrName[1],
+            };
+            items.push(it);
+          }
+        });
+        resolve(items);
+      }
+    );
+  }
 }

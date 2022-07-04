@@ -91,3 +91,19 @@ test("find diffItem", async () => {
     },
   ]);
 });
+
+test('findTree', async () => {
+  const items = await git.findTree('HEAD')
+  expect(items).toEqual([
+    {
+      type: 'blob',
+      hash: 'ae6c6651aa9f519698cff70276cc799ff894e327',
+      name: 'index.html'
+    },
+    {
+      type: 'tree',
+      hash: '3a4658f192a502b56e49456691672ec99fe481ab',
+      name: 'src'
+    }
+  ])
+})

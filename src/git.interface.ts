@@ -20,3 +20,9 @@ export interface Item {
     commitHash: string;
     hash: string;
 }
+
+export interface TreeItem {
+    type: 'blob' | 'tree';
+    hash: string;
+    name: string;
+}
