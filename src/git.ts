@@ -198,15 +198,30 @@ export class Git {
     if (limit !== undefined) {
       revListArgvs.push(`-${limit}`);
     }
+    // -t 显示树条目本身以及子树。
+    // --root 包括第一次提交
+    // -c 包括 merge
     return this.spawnPipe<Item[]>(
-      [revListArgvs, ["diff-tree", "--stdin", "-t"]],
+      [revListArgvs, ["diff-tree", "--stdin", "-t", "--root", "-c"]],
       (data, resolve, reject) => {
         const items: Array<Item> = [];
         let commitHash = "";
         data.split("\n").forEach((item) => {
-          if (item[0] === ":") {
+          if (item[0] === ":" && item[1] === ':') {
+            const rightFileHash = item.slice(105, 145);
+            const type = item.slice(146, 148).trim();
+            if (type === "D") {
+              return;
+            }
+            const goal = {
+              hash: rightFileHash,
+              commitHash,
+            };
+            items.push(goal);
+          } else if (item[0] === ":") {
             const rightFileHash = item.slice(56, 96);
-            const type = item.slice(97, 98);
+            // type 可能是两个或一个字符
+            const type = item.slice(97, 99).trim();
             // 删除文件后，右边的hash是000000000......
             // 但是，如果使用左边的话，就会冲突，因为一定会存在一次添加/修改
             // 的hash值和删除时相同。

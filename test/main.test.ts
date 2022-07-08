@@ -82,12 +82,21 @@ describe("git", () => {
         commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
       },
       {
+        hash: "ae6c6651aa9f519698cff70276cc799ff894e327",
+        commitHash: "5d3886b5e0063cde98f815e87ad31b4bf58c5d15",
+      },
+      
+      {
         hash: "b54d14dd98cf67071749b29e567ef79b52ff3223",
         commitHash: "b0fd673786639a413c987121b246d65b3c8f1e7d",
       },
       {
         hash: "4767066f593c489c399873369a73e137ac8a0ff9",
         commitHash: "71ab32d443c4cb5d0ffeffeda931bea741b4957f",
+      },
+      {
+        hash: "6c70bcfe4d48d15f8a6531d6b491e65d641a377c",
+        commitHash: "858a8ed503710b0ee916097d07d8dc28c6812f5e",
       },
     ]);
   });
