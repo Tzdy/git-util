@@ -1,6 +1,6 @@
 {
-  "name": "@tsdy/git",
-  "version": "1.0.0",
+  "name": "@tsdy/git-util",
+  "version": "0.0.1-beta.0",
   "description": "",
   "main": "./dist/git.js",
   "types": "./src/git.ts",
@@ -8,8 +8,16 @@
     "dev": "npx babel src -w  -d dist -x '.ts'",
     "test": "npx jest",
     "typeCheck": "tsc --noEmit",
-    "build": "npx babel src -d dist -x '.ts'"
+    "build": "npx babel src -d dist -x '.ts'",
+    "prerelease": "npm version prerelease -m prerelease --beta",
+    "publish": "npm run build && npm publish --access=public ."
   },
+  "files": [
+    "src/**/*",
+    "dist/**/*",
+    "package.json",
+    "tsconfig.json"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
