@@ -4,7 +4,7 @@ const ROOT_PATH = resolve();
 const REPO_NAME = "gitrepo";
 const git = new Git(ROOT_PATH, REPO_NAME);
 describe("git", () => {
-  test("git display and switch branch", async () => {
+  it("git display and switch branch", async () => {
     await git.updateHead("master");
     const result = await git.findBranch();
     expect(result).toEqual([
@@ -28,7 +28,7 @@ describe("git", () => {
     expect(await git.findHead()).toEqual({ name: "v1", type: "tag" });
   });
 
-  test("find commits", async () => {
+  it("find commits", async () => {
     const commits = await git.findCommit("master");
     expect(commits).toEqual([
       {
@@ -69,7 +69,7 @@ describe("git", () => {
     ]);
   });
 
-  test("find diffItem", async () => {
+  it("find diffItem", async () => {
     await git.updateHead("master");
     const items = await git.findDiffItem("HEAD");
     expect(items).toEqual([
@@ -85,7 +85,7 @@ describe("git", () => {
         hash: "ae6c6651aa9f519698cff70276cc799ff894e327",
         commitHash: "5d3886b5e0063cde98f815e87ad31b4bf58c5d15",
       },
-      
+
       {
         hash: "b54d14dd98cf67071749b29e567ef79b52ff3223",
         commitHash: "b0fd673786639a413c987121b246d65b3c8f1e7d",
@@ -101,7 +101,7 @@ describe("git", () => {
     ]);
   });
 
-  test("findTree", async () => {
+  it("findTree", async () => {
     const items = await git.findTree("HEAD");
     expect(items).toEqual([
       {
@@ -117,7 +117,7 @@ describe("git", () => {
     ]);
   });
 
-  test("findBlob", async () => {
+  it("findBlob", async () => {
     const items = await git.findBlob(
       "ae6c6651aa9f519698cff70276cc799ff894e327"
     );

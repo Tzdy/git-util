@@ -201,13 +201,16 @@ export class Git {
     // -t 显示树条目本身以及子树。
     // --root 包括第一次提交
     // -c 包括 merge
-    return this.spawnPipe<Item[]>(
-      [revListArgvs, ["diff-tree", "--stdin", "-t", "--root", "-c"]],
+    return this.spawn<Item[]>(
+      ["log", "--format=%H", "--raw", "-c", "-t", "--abbrev=40"],
       (data, resolve, reject) => {
         const items: Array<Item> = [];
         let commitHash = "";
         data.split("\n").forEach((item) => {
-          if (item[0] === ":" && item[1] === ':') {
+          if (!item) {
+            return;
+          }
+          if (item[0] === ":" && item[1] === ":") {
             const rightFileHash = item.slice(105, 145);
             const type = item.slice(146, 148).trim();
             if (type === "D") {
@@ -269,8 +272,11 @@ export class Git {
   }
 
   public findBlob(blobHash: string) {
-    return this.spawn<string>(['cat-file', '-p', blobHash], (data, resolve, reject) => {
-      resolve(data)
-    })
+    return this.spawn<string>(
+      ["cat-file", "-p", blobHash],
+      (data, resolve, reject) => {
+        resolve(data);
+      }
+    );
   }
 }
