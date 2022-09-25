@@ -1,4 +1,5 @@
 # TyGitUtil
+v0.0.1-beta.1
 
 ## Start
 `npm install @tsdy/git --save`

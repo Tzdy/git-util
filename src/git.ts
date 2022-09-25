@@ -51,7 +51,7 @@ export class Git {
       child.stdout.on("data", (buffer) => {
         data += buffer.toString("utf-8");
       });
-      child.on("exit", () => {
+      child.on("close", () => {
         if (fn) {
           // 由于需要按照\n切割字符串，所以清除最后一个\n
           fn(data.replace(/\n$/, ""), resolve, reject);
@@ -96,7 +96,7 @@ export class Git {
         resultChild.stdout.on("data", (buffer) => {
           data += buffer.toString("utf-8");
         });
-        resultChild.on("exit", () => {
+        resultChild.on("close", () => {
           if (fn) {
             // 由于需要按照\n切割字符串，所以清除最后一个\n
             fn(data.replace(/\n$/, ""), resolve, reject);
@@ -192,57 +192,97 @@ export class Git {
     );
   }
 
-  // 如果有三个新提交，那么limit应该为4
-  public findDiffItem(commitHash: string, limit?: number) {
-    const revListArgvs: string[] = ["rev-list", commitHash];
-    if (limit !== undefined) {
-      revListArgvs.push(`-${limit}`);
-    }
+  public findAllCommitHash(branchName: string) {
+    return this.spawn<Array<string>>(
+      ["rev-list", branchName],
+      (data, resolve, reject) => {
+        const commitHashList = data.split("\n");
+        resolve(commitHashList);
+      }
+    );
+  }
+
+  public findDiffItem(commitHashList: Array<string>) {
     // -t 显示树条目本身以及子树。
     // --root 包括第一次提交
     // -c 包括 merge
     return this.spawn<Item[]>(
-      ["log", "--format=%H", "--raw", "-c", "-t", "--abbrev=40"],
+      [
+        "log",
+        ...commitHashList,
+        "--format={@}%cN{@}%ci{@}%H{@}%T{@}%B{@}{end}",
+        "--raw",
+        "-t",
+        "-c",
+        "--abbrev=40",
+        "--no-walk=unsorted",
+      ],
       (data, resolve, reject) => {
-        const items: Array<Item> = [];
-        let commitHash = "";
-        data.split("\n").forEach((item) => {
-          if (!item) {
-            return;
-          }
-          if (item[0] === ":" && item[1] === ":") {
-            const rightFileHash = item.slice(105, 145);
-            const type = item.slice(146, 148).trim();
-            if (type === "D") {
-              return;
-            }
-            const goal = {
-              hash: rightFileHash,
-              commitHash,
+        const commitInfoList = (
+          data.match(
+            /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}\{end\}/gs
+          ) || []
+        ).map((raw) => {
+          const match = raw.match(
+            /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
+          );
+          if (match) {
+            const log = {
+              username: match[1], // 提交者名称
+              time: new Date(match[2]), // 提交时间
+              commitHash: match[3],
+              treeHash: match[4],
+              comment: match[5],
             };
-            items.push(goal);
-          } else if (item[0] === ":") {
-            const rightFileHash = item.slice(56, 96);
-            // type 可能是两个或一个字符
-            const type = item.slice(97, 99).trim();
-            // 删除文件后，右边的hash是000000000......
-            // 但是，如果使用左边的话，就会冲突，因为一定会存在一次添加/修改
-            // 的hash值和删除时相同。
-            // 所以，我们不保存删除的
-            if (type === "D") {
-              return;
-            }
-            // \t 是一个字符 注意了
-            // const dotFilename = item.slice(99, item.length);
-            const goal = {
-              hash: rightFileHash,
-              commitHash,
-            };
-            items.push(goal);
-          } else {
-            commitHash = item;
+            return log;
           }
         });
+        const items: Array<Item> = [];
+        // commitInfoList.length === items.length 是绝对相等的
+        data
+          .split(/\{@\}.*?\{@\}.*?\{@\}.*?\{@\}.*?\{@\}.*?\n\{@\}\{end\}/s)
+          .slice(1)
+          .forEach((raw, index) => {
+            if (!raw) {
+              return;
+            }
+            const commit = commitInfoList[index];
+            if (!commit) {
+              return;
+            }
+            raw.split("\n").forEach((item) => {
+              if (item[0] === ":" && item[1] === ":") {
+                const rightFileHash = item.slice(105, 145);
+                const type = item.slice(146, 148).trim();
+                if (type === "D") {
+                  return;
+                }
+                const goal = {
+                  hash: rightFileHash,
+                  ...commit,
+                };
+                items.push(goal);
+              } else if (item[0] === ":") {
+                const rightFileHash = item.slice(56, 96);
+                // type 可能是两个或一个字符
+                const type = item.slice(97, 99).trim();
+                // 删除文件后，右边的hash是000000000......
+                // 但是，如果使用左边的话，就会冲突，因为一定会存在一次添加/修改
+                // 的hash值和删除时相同。
+                // 所以，我们不保存删除的
+                if (type === "D") {
+                  return;
+                }
+                // \t 是一个字符 注意了
+                // const dotFilename = item.slice(99, item.length);
+                const goal = {
+                  hash: rightFileHash,
+                  ...commit,
+                };
+                items.push(goal);
+              }
+            });
+          });
         resolve(items);
       }
     );
