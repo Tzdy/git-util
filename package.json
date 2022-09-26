@@ -1,6 +1,6 @@
 {
   "name": "@tsdy/git-util",
-  "version": "0.0.1-beta.2",
+  "version": "0.0.1-beta.3",
   "description": "",
   "main": "./dist/git.js",
   "types": "./src/git.ts",
