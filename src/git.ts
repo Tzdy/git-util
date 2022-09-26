@@ -1,4 +1,5 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { mkdir } from "fs/promises";
 import { join } from "path";
 import { Branch, Commit, Head, Item, TreeItem } from "./git.interface";
 
@@ -318,5 +319,12 @@ export class Git {
         resolve(data);
       }
     );
+  }
+
+  public async createDirAndInitBare() {
+    await mkdir(this.repoPath);
+    return this.spawn<void>(["init", "--bare"], (data, resolve, reject) => {
+      resolve(void 0);
+    });
   }
 }

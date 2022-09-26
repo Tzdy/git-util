@@ -1,11 +1,13 @@
 import { Git } from "./git";
-const git = new Git(
-  "/Users/mac/Documents/web/server/gogs/ty-git",
-  "gitrepo.git"
-);
-git.findBlob("ae6c6651aa9f519698cff70276cc799ff894e327").then((res) => {
-  console.log(res);
-});
+const git = new Git("/Users/mac/Documents/web/server/gogs/ty-git", "git.git");
+git
+  .findBlob("ae6c6651aa9f519698cff70276cc799ff894e327")
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((res) => {
+    console.log(res);
+  });
 // git.findTree('HEAD').then(res => {
 //     console.log(res)
 // })
@@ -25,6 +27,8 @@ async function main() {
   //       throw new Error(`${i}`);
   //     }
   //   }
-  console.log(await git.findDiffItem(await git.findAllCommitHash("master")));
+  // console.log(await git.findDiffItem(await git.findAllCommitHash("master")));
+  await git.createDirAndInitBare();
 }
+
 main();
