@@ -2,6 +2,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { mkdir } from "fs/promises";
 import { join } from "path";
 import { Branch, Commit, Head, Item, TreeItem } from "./git.interface";
+import { parseLanguageAfterFix } from "./language";
 
 export * from "./language";
 
@@ -264,6 +265,7 @@ export class Git {
                   type,
                   itemType: "blob" as "blob" | "tree",
                   path,
+                  langId: -1,
                   ...commit,
                 };
                 if (type === "D") {
@@ -285,6 +287,7 @@ export class Git {
                   type,
                   itemType: "blob" as "blob" | "tree",
                   path,
+                  langId: -1,
                   ...commit,
                 };
                 if (type === "D") {
@@ -295,6 +298,7 @@ export class Git {
               }
             });
           });
+        // 判断itemType是blob还是tree
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           const nextItem = items[i + 1];
@@ -306,6 +310,26 @@ export class Git {
             }
           }
         }
+        // 设置文件语言类型
+        items.forEach((item) => {
+          if (item.itemType === "tree") {
+            return;
+          }
+          const afterFixArr = item.path.split("/").pop()?.split(".");
+          if (!afterFixArr) {
+            return;
+          }
+          let afterFix = afterFixArr[afterFixArr.length - 1];
+          if (afterFixArr.length > 1) {
+            afterFix = "." + afterFix;
+          }
+          if (afterFix) {
+            const lang = parseLanguageAfterFix(afterFix);
+            if (lang) {
+              item.langId = lang.languageId;
+            }
+          }
+        });
         resolve(items);
       }
     );

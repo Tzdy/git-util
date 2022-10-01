@@ -26,6 +26,7 @@ export interface Item {
   type: "M" | "A" | "D";
   itemType: "blob" | "tree"; // 保存类型，方便代码分析
   path: string; // 保存路径，方便代码分析
+  langId: number; // 文件语言类型id -1为Other
 }
 
 export interface TreeItem {

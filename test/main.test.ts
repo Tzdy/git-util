@@ -113,6 +113,7 @@ describe("commit", () => {
         type: "D",
         path: "src",
         itemType: "tree",
+        langId: -1,
         username: "Tsdy",
       },
       {
@@ -123,6 +124,7 @@ describe("commit", () => {
         treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
         type: "D",
         path: "src/test.html",
+        langId: 146,
         itemType: "blob",
         username: "Tsdy",
       },
@@ -135,6 +137,7 @@ describe("commit", () => {
         type: "A",
         path: "src",
         itemType: "tree",
+        langId: -1,
         comment: "add a dir",
       },
       {
@@ -146,6 +149,7 @@ describe("commit", () => {
         type: "A",
         itemType: "blob",
         path: "src/test.html",
+        langId: 146,
         comment: "add a dir",
       },
       {
@@ -157,6 +161,7 @@ describe("commit", () => {
         type: "M",
         itemType: "blob",
         path: "index.html",
+        langId: 146,
         comment: "merge",
       },
       {
@@ -168,6 +173,7 @@ describe("commit", () => {
         type: "M",
         itemType: "blob",
         path: "index.html",
+        langId: 146,
         comment: "master",
       },
       {
@@ -179,6 +185,7 @@ describe("commit", () => {
         type: "M",
         itemType: "blob",
         path: "index.html",
+        langId: 146,
         comment: "dev",
       },
       {
@@ -190,6 +197,7 @@ describe("commit", () => {
         type: "A",
         itemType: "blob",
         path: "index.html",
+        langId: 146,
         comment: "init",
       },
     ]);
