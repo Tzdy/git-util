@@ -23,6 +23,7 @@
   "dependencies": {
     "@babel/runtime": "^7.18.3",
     "dotenv": "^16.0.0",
+    "linguist-languages": "^7.21.0",
     "reflect-metadata": "0.1.13",
     "typescript": "4.5.4"
   },

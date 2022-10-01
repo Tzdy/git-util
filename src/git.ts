@@ -3,6 +3,8 @@ import { mkdir } from "fs/promises";
 import { join } from "path";
 import { Branch, Commit, Head, Item, TreeItem } from "./git.interface";
 
+export * from "./language";
+
 export class Git {
   private repoPath: string;
 
@@ -254,32 +256,35 @@ export class Git {
             raw.split("\n").forEach((item) => {
               if (item[0] === ":" && item[1] === ":") {
                 const rightFileHash = item.slice(105, 145);
-                const type = item.slice(146, 148).trim();
-                if (type === "D") {
-                  return;
-                }
+                // 合并的情况MM也当作M处理
+                const type = item.slice(146, 147).trim() as "D" | "M" | "A";
                 const goal = {
                   hash: rightFileHash,
+                  type,
                   ...commit,
                 };
+                if (type === "D") {
+                  const leftFileHash = item.slice(15, 55);
+                  goal.hash = leftFileHash;
+                }
                 items.push(goal);
               } else if (item[0] === ":") {
                 const rightFileHash = item.slice(56, 96);
                 // type 可能是两个或一个字符
-                const type = item.slice(97, 99).trim();
+                const type = item.slice(97, 98).trim() as "D" | "M" | "A";
                 // 删除文件后，右边的hash是000000000......
-                // 但是，如果使用左边的话，就会冲突，因为一定会存在一次添加/修改
-                // 的hash值和删除时相同。
-                // 所以，我们不保存删除的
-                if (type === "D") {
-                  return;
-                }
+                // 除了删除操作外，使用右边的hash值。
                 // \t 是一个字符 注意了
                 // const dotFilename = item.slice(99, item.length);
                 const goal = {
                   hash: rightFileHash,
+                  type,
                   ...commit,
                 };
+                if (type === "D") {
+                  const leftFileHash = item.slice(15, 55);
+                  goal.hash = leftFileHash;
+                }
                 items.push(goal);
               }
             });

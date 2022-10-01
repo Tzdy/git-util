@@ -23,6 +23,7 @@ export interface Item {
   time: Date; // 提交时间
   treeHash: string;
   comment: string;
+  type: "M" | "A" | "D";
 }
 
 export interface TreeItem {

@@ -9,7 +9,7 @@ describe("display and switch branch", () => {
     expect(result).toEqual([
       {
         name: "master",
-        latestCommit: "bf7d5e1bf760080311b120abd258a48627d47df0",
+        latestCommit: "78bbea4945106102c4acd49a071a9ca822e4be95",
       },
       {
         name: "dev",
@@ -43,6 +43,13 @@ describe("commit", () => {
   it("find commits", async () => {
     const commits = await git.findCommit("master");
     expect(commits).toEqual([
+      {
+        comment: "delete",
+        commitHash: "78bbea4945106102c4acd49a071a9ca822e4be95",
+        time: new Date("2022-10-01T13:28:32.000Z"),
+        treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
+        username: "Tsdy",
+      },
       {
         comment: "add a dir",
         commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
@@ -85,6 +92,7 @@ describe("commit", () => {
   it("fimd all commit hash", async () => {
     commitHashList.push(...(await git.findAllCommitHash("master")));
     expect(commitHashList).toEqual([
+      "78bbea4945106102c4acd49a071a9ca822e4be95",
       "bf7d5e1bf760080311b120abd258a48627d47df0",
       "5d3886b5e0063cde98f815e87ad31b4bf58c5d15",
       "b0fd673786639a413c987121b246d65b3c8f1e7d",
@@ -97,11 +105,30 @@ describe("commit", () => {
     const items = await git.findDiffItem(commitHashList);
     expect(items).toEqual([
       {
+        comment: "delete",
+        commitHash: "78bbea4945106102c4acd49a071a9ca822e4be95",
+        hash: "3a4658f192a502b56e49456691672ec99fe481ab",
+        time: new Date("2022-10-01T13:28:32.000Z"),
+        treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
+        type: "D",
+        username: "Tsdy",
+      },
+      {
+        comment: "delete",
+        commitHash: "78bbea4945106102c4acd49a071a9ca822e4be95",
+        hash: "56efbdba61ff12f90f864930b9a85eac0259666d",
+        time: new Date("2022-10-01T13:28:32.000Z"),
+        treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
+        type: "D",
+        username: "Tsdy",
+      },
+      {
         hash: "3a4658f192a502b56e49456691672ec99fe481ab",
         username: "Tsdy",
         time: new Date("2022-07-04T14:21:28.000Z"),
         commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
         treeHash: "a9bc48f560b0c94c26d469b6c62c023d038bd637",
+        type: "A",
         comment: "add a dir",
       },
       {
@@ -110,6 +137,7 @@ describe("commit", () => {
         time: new Date("2022-07-04T14:21:28.000Z"),
         commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
         treeHash: "a9bc48f560b0c94c26d469b6c62c023d038bd637",
+        type: "A",
         comment: "add a dir",
       },
       {
@@ -118,6 +146,7 @@ describe("commit", () => {
         time: new Date("2022-05-30T10:00:30.000Z"),
         commitHash: "5d3886b5e0063cde98f815e87ad31b4bf58c5d15",
         treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
+        type: "M",
         comment: "merge",
       },
       {
@@ -126,6 +155,7 @@ describe("commit", () => {
         time: new Date("2022-05-30T09:48:37.000Z"),
         commitHash: "b0fd673786639a413c987121b246d65b3c8f1e7d",
         treeHash: "26a16b3d267e7d8f3ed943e43fbc100a4ea70fdc",
+        type: "M",
         comment: "master",
       },
       {
@@ -134,6 +164,7 @@ describe("commit", () => {
         time: new Date("2022-05-30T09:45:59.000Z"),
         commitHash: "71ab32d443c4cb5d0ffeffeda931bea741b4957f",
         treeHash: "a8d8bc420f0fa441b2f61d15124083dfe2ffe34d",
+        type: "M",
         comment: "dev",
       },
       {
@@ -142,6 +173,7 @@ describe("commit", () => {
         time: new Date("2022-05-30T09:45:31.000Z"),
         commitHash: "858a8ed503710b0ee916097d07d8dc28c6812f5e",
         treeHash: "d34fba8343729ae1913f8b19311b13795946680e",
+        type: "A",
         comment: "init",
       },
     ]);
@@ -154,11 +186,6 @@ describe("commit", () => {
         type: "blob",
         hash: "ae6c6651aa9f519698cff70276cc799ff894e327",
         name: "index.html",
-      },
-      {
-        type: "tree",
-        hash: "3a4658f192a502b56e49456691672ec99fe481ab",
-        name: "src",
       },
     ]);
   });
