@@ -258,9 +258,12 @@ export class Git {
                 const rightFileHash = item.slice(105, 145);
                 // 合并的情况MM也当作M处理
                 const type = item.slice(146, 147).trim() as "D" | "M" | "A";
+                const path = item.slice(149);
                 const goal = {
                   hash: rightFileHash,
                   type,
+                  itemType: "blob" as "blob" | "tree",
+                  path,
                   ...commit,
                 };
                 if (type === "D") {
@@ -276,9 +279,12 @@ export class Git {
                 // 除了删除操作外，使用右边的hash值。
                 // \t 是一个字符 注意了
                 // const dotFilename = item.slice(99, item.length);
+                const path = item.slice(99);
                 const goal = {
                   hash: rightFileHash,
                   type,
+                  itemType: "blob" as "blob" | "tree",
+                  path,
                   ...commit,
                 };
                 if (type === "D") {
@@ -289,6 +295,17 @@ export class Git {
               }
             });
           });
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          const nextItem = items[i + 1];
+          if (item.type === "A" || item.type === "D") {
+            if (nextItem) {
+              if (nextItem.path.match(new RegExp(`^${item.path}`))) {
+                item.itemType = "tree";
+              }
+            }
+          }
+        }
         resolve(items);
       }
     );

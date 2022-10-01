@@ -24,6 +24,8 @@ export interface Item {
   treeHash: string;
   comment: string;
   type: "M" | "A" | "D";
+  itemType: "blob" | "tree"; // 保存类型，方便代码分析
+  path: string; // 保存路径，方便代码分析
 }
 
 export interface TreeItem {

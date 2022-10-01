@@ -111,6 +111,8 @@ describe("commit", () => {
         time: new Date("2022-10-01T13:28:32.000Z"),
         treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
         type: "D",
+        path: "src",
+        itemType: "tree",
         username: "Tsdy",
       },
       {
@@ -120,6 +122,8 @@ describe("commit", () => {
         time: new Date("2022-10-01T13:28:32.000Z"),
         treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
         type: "D",
+        path: "src/test.html",
+        itemType: "blob",
         username: "Tsdy",
       },
       {
@@ -129,6 +133,8 @@ describe("commit", () => {
         commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
         treeHash: "a9bc48f560b0c94c26d469b6c62c023d038bd637",
         type: "A",
+        path: "src",
+        itemType: "tree",
         comment: "add a dir",
       },
       {
@@ -138,6 +144,8 @@ describe("commit", () => {
         commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
         treeHash: "a9bc48f560b0c94c26d469b6c62c023d038bd637",
         type: "A",
+        itemType: "blob",
+        path: "src/test.html",
         comment: "add a dir",
       },
       {
@@ -147,6 +155,8 @@ describe("commit", () => {
         commitHash: "5d3886b5e0063cde98f815e87ad31b4bf58c5d15",
         treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
         type: "M",
+        itemType: "blob",
+        path: "index.html",
         comment: "merge",
       },
       {
@@ -156,6 +166,8 @@ describe("commit", () => {
         commitHash: "b0fd673786639a413c987121b246d65b3c8f1e7d",
         treeHash: "26a16b3d267e7d8f3ed943e43fbc100a4ea70fdc",
         type: "M",
+        itemType: "blob",
+        path: "index.html",
         comment: "master",
       },
       {
@@ -165,6 +177,8 @@ describe("commit", () => {
         commitHash: "71ab32d443c4cb5d0ffeffeda931bea741b4957f",
         treeHash: "a8d8bc420f0fa441b2f61d15124083dfe2ffe34d",
         type: "M",
+        itemType: "blob",
+        path: "index.html",
         comment: "dev",
       },
       {
@@ -174,6 +188,8 @@ describe("commit", () => {
         commitHash: "858a8ed503710b0ee916097d07d8dc28c6812f5e",
         treeHash: "d34fba8343729ae1913f8b19311b13795946680e",
         type: "A",
+        itemType: "blob",
+        path: "index.html",
         comment: "init",
       },
     ]);
