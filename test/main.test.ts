@@ -203,13 +203,49 @@ describe("commit", () => {
     ]);
   });
 
-  it("findTree", async () => {
+  it("findTree HEAD", async () => {
     const items = await git.findTree("HEAD");
     expect(items).toEqual([
       {
         type: "blob",
         hash: "ae6c6651aa9f519698cff70276cc799ff894e327",
         name: "index.html",
+        path: "index.html",
+      },
+    ]);
+  });
+
+  it("findTree commitHash bf7d5e1bf760080311b120abd258a48627d47df0", async () => {
+    const items = await git.findTree(
+      "bf7d5e1bf760080311b120abd258a48627d47df0"
+    );
+    expect(items).toEqual([
+      {
+        type: "blob",
+        hash: "ae6c6651aa9f519698cff70276cc799ff894e327",
+        name: "index.html",
+        path: "index.html",
+      },
+      {
+        type: "tree",
+        hash: "3a4658f192a502b56e49456691672ec99fe481ab",
+        name: "src",
+        path: "src/",
+      },
+    ]);
+  });
+
+  it("findTree commitHash bf7d5e1bf760080311b120abd258a48627d47df0 src/", async () => {
+    const items = await git.findTree(
+      "bf7d5e1bf760080311b120abd258a48627d47df0",
+      "src/"
+    );
+    expect(items).toEqual([
+      {
+        type: "blob",
+        hash: "56efbdba61ff12f90f864930b9a85eac0259666d",
+        name: "test.html",
+        path: "src/test.html",
       },
     ]);
   });

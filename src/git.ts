@@ -335,20 +335,24 @@ export class Git {
     );
   }
 
-  // 这个hash可以是commitHash和treeHash
-  public findTree(hash: string) {
+  // 这个hash可以是commitHash，treeHash，分支名。
+  // hash决定了本次查询的root path
+  // path eg.. src/ or src/index.html or index.html or . not has ./
+  public findTree(hash: string, path: string = ".") {
     return this.spawn<TreeItem[]>(
-      ["ls-tree", hash],
+      ["ls-tree", hash, path],
       (data, resolve, reject) => {
         const items: TreeItem[] = [];
         data.split("\n").forEach((item) => {
           if (item) {
             const array = item.split(" ");
-            const hashOrName = array[2].split("\t");
+            const hashOrPath = array[2].split("\t");
             const it = {
               type: array[1] as "blob" | "tree",
-              hash: hashOrName[0],
-              name: hashOrName[1],
+              hash: hashOrPath[0],
+              name: hashOrPath[1].replace(new RegExp(`^${path}`), ""),
+              // 如果是tree，后面加一个/，这样用这个path就可以直接调用findTree获得path下的treelist
+              path: array[1] === "blob" ? hashOrPath[1] : hashOrPath[1] + "/",
             };
             items.push(it);
           }

@@ -33,4 +33,5 @@ export interface TreeItem {
   type: "blob" | "tree";
   hash: string;
   name: string;
+  path: string;
 }
