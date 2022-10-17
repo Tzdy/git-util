@@ -1,8 +1,5 @@
 import { Git } from "./git";
-const git = new Git(
-  "/Users/mac/Documents/web/server/gogs/ty-git",
-  "gitrepo.git"
-);
+const git = new Git("/Users/mac/Documents/web/server/gogs/ty-git", ".git");
 // git
 //   .findBlob("ae6c6651aa9f519698cff70276cc799ff894e327")
 //   .then((res) => {
@@ -30,11 +27,13 @@ async function main() {
   //       throw new Error(`${i}`);
   //     }
   //   }
-  const list = await git.findAllCommitHash("master");
-  await git.findDiffItem(list);
+  // const list = await git.findAllCommitHash("master");
+  // await git.findDiffItem(list);
   // console.log(list);
   // console.log(await git.findDiffItem(list));
   // await git.createDirAndInitBare();
+  const tree = await git.findTree("master");
+  console.log(await git.findCommitInfoByTree(tree));
 }
 
 main();
