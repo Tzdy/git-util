@@ -161,41 +161,56 @@ export class Git {
     );
   }
 
-  public findCommit(branchName: string) {
-    return this.spawn<Array<Commit>>(
-      [
-        "log",
-        "--format={@}%cN{@}%ci{@}%H{@}%T{@}%B{@}{end}",
-        "--date=iso8601-strict",
-        branchName,
-      ],
-      (data, resolve, reject) => {
-        const result: Array<Commit> = [];
-        const array = data.split("{end}");
-        array.forEach((item) => {
-          if (item) {
-            /*
+  public findCommit(
+    branchName: string,
+    page?: number,
+    limit?: number,
+    commitHashList?: Array<string>
+  ) {
+    const argvs: string[] = [
+      "log",
+      "--format={@}%cN{@}%ci{@}%H{@}%T{@}%B{@}{end}",
+      "--date=iso8601-strict",
+    ];
+    // page和limit必须成对使用
+    // page从1开始
+    if (page && limit) {
+      argvs.push(`--skip=${(page - 1) * limit}`);
+      argvs.push(`--max-count=${limit}`);
+    }
+    if (commitHashList) {
+      argvs.push("--no-walk=unsorted");
+      argvs.push(...commitHashList);
+    } else {
+      // 分支名相当于对应分支顶层的commithash。
+      argvs.push(branchName);
+    }
+    return this.spawn<Array<Commit>>(argvs, (data, resolve, reject) => {
+      const result: Array<Commit> = [];
+      const array = data.split("{end}");
+      array.forEach((item) => {
+        if (item) {
+          /*
             这个是正则匹配的原始字符串。
             {@}Tsdy{@}2022-05-30 18:00:30 +0800{@}5d3886b{@}79be2f0{@}merge
             {@}{end} 
             */
-            const match = item.match(
-              /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
-            );
-            if (match) {
-              result.push({
-                username: match[1], // 提交者名称
-                time: new Date(match[2]), // 提交时间
-                commitHash: match[3],
-                treeHash: match[4],
-                comment: match[5],
-              });
-            }
+          const match = item.match(
+            /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
+          );
+          if (match) {
+            result.push({
+              username: match[1], // 提交者名称
+              time: new Date(match[2]), // 提交时间
+              commitHash: match[3],
+              treeHash: match[4],
+              comment: match[5],
+            });
           }
-        });
-        resolve(result);
-      }
-    );
+        }
+      });
+      resolve(result);
+    });
   }
 
   public findAllCommitHash(branchName: string) {

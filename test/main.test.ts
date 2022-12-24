@@ -88,6 +88,67 @@ describe("commit", () => {
     ]);
   });
 
+  it("find commits commitHashList", async () => {
+    const commits = await git.findCommit("master", undefined, undefined, [
+      "bf7d5e1bf760080311b120abd258a48627d47df0",
+      "71ab32d443c4cb5d0ffeffeda931bea741b4957f",
+    ]);
+    expect(commits).toEqual([
+      {
+        comment: "add a dir",
+        commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
+        time: new Date("2022-07-04T14:21:28.000Z"),
+        treeHash: "a9bc48f560b0c94c26d469b6c62c023d038bd637",
+        username: "Tsdy",
+      },
+      {
+        username: "Tsdy",
+        time: new Date("2022-05-30T09:45:59.000Z"),
+        commitHash: "71ab32d443c4cb5d0ffeffeda931bea741b4957f",
+        treeHash: "a8d8bc420f0fa441b2f61d15124083dfe2ffe34d",
+        comment: "dev",
+      },
+    ]);
+  });
+
+  it("find commits page limit", async () => {
+    const commits1 = await git.findCommit("master", 1, 2);
+    const commits2 = await git.findCommit("master", 2, 2);
+    expect(commits1).toEqual([
+      {
+        comment: "delete",
+        commitHash: "78bbea4945106102c4acd49a071a9ca822e4be95",
+        time: new Date("2022-10-01T13:28:32.000Z"),
+        treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
+        username: "Tsdy",
+      },
+      {
+        comment: "add a dir",
+        commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
+        time: new Date("2022-07-04T14:21:28.000Z"),
+        treeHash: "a9bc48f560b0c94c26d469b6c62c023d038bd637",
+        username: "Tsdy",
+      },
+    ]);
+
+    expect(commits2).toEqual([
+      {
+        username: "Tsdy",
+        time: new Date("2022-05-30T10:00:30.000Z"),
+        commitHash: "5d3886b5e0063cde98f815e87ad31b4bf58c5d15",
+        treeHash: "79be2f0f9965def3bf93262900999ef1f169e92d",
+        comment: "merge",
+      },
+      {
+        username: "Tsdy",
+        time: new Date("2022-05-30T09:48:37.000Z"),
+        commitHash: "b0fd673786639a413c987121b246d65b3c8f1e7d",
+        treeHash: "26a16b3d267e7d8f3ed943e43fbc100a4ea70fdc",
+        comment: "master",
+      },
+    ]);
+  });
+
   const commitHashList: Array<string> = [];
   it("fimd all commit hash", async () => {
     commitHashList.push(...(await git.findAllCommitHash("master")));
