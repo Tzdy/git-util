@@ -1,6 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { mkdir } from "fs/promises";
 import { join } from "path";
+import { Readable } from "stream";
 import { Branch, Commit, Head, Item, TreeItem } from "./git.interface";
 import { parseLanguageAfterFix } from "./language";
 
@@ -53,6 +54,43 @@ export class Git {
       const child = spawn("git", argvs, {
         cwd: this.repoPath,
       });
+      this.exception(child, reject);
+      child.stdout.on("data", (buffer) => {
+        data += buffer.toString("utf-8");
+      });
+      child.on("close", () => {
+        if (fn) {
+          // 由于需要按照\n切割字符串，所以清除最后一个\n
+          fn(data.replace(/\n$/, ""), resolve, reject);
+        } else {
+          resolve(void 0);
+        }
+      });
+    });
+  }
+
+  private spawnPipeEnd<T>(
+    input: string,
+    argvs: Array<string>,
+    fn?: (
+      data: string,
+      resolve: (value: T) => void,
+      reject: (reason: any) => void
+    ) => void
+  ) {
+    return new Promise<T | undefined>((resolve, reject) => {
+      let data = "";
+      const child = spawn("git", argvs, {
+        cwd: this.repoPath,
+      });
+      const buffer = Buffer.from(input, "utf-8");
+      const stream = new (class extends Readable {
+        _read(size: number): void {
+          this.push(buffer);
+          this.push(null);
+        }
+      })();
+      stream.pipe(child.stdin);
       this.exception(child, reject);
       child.stdout.on("data", (buffer) => {
         data += buffer.toString("utf-8");
@@ -382,13 +420,18 @@ export class Git {
     });
   }
 
-  public findBlob(blobHash: string) {
-    return this.spawn<string>(
-      ["cat-file", "-p", blobHash],
+  public findBlob(hash: string, path: string) {
+    return this.spawnPipeEnd<{ size: number; value: string }>(
+      `${hash}:${path}`,
+      ["cat-file", "--batch=%(objectsize)"],
       (data, resolve, reject) => {
-        resolve(data);
+        const [size, value] = data.split(/(?<=^[0-9]+)\n/);
+        resolve({
+          size: Number(size),
+          value,
+        });
       }
-    );
+    ) as Promise<{ size: number; value: string }>;
   }
 
   public async createDirAndInitBare() {

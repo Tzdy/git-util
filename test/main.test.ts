@@ -312,9 +312,11 @@ describe("commit", () => {
   });
 
   it("findBlob", async () => {
-    const items = await git.findBlob(
-      "ae6c6651aa9f519698cff70276cc799ff894e327"
+    const item = await git.findBlob("HEAD", "index.html");
+    console.log(item);
+    expect(item.value.replace(/[ |\n]/gs, "")).toBe(
+      `<html></html><body></body>`
     );
-    expect(items.replace(/[ |\n]/gs, "")).toBe(`<html></html><body></body>`);
+    expect(item.size).toBe(34);
   });
 });
