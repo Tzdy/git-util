@@ -265,7 +265,7 @@ describe("commit", () => {
   });
 
   it("findTree HEAD", async () => {
-    const items = await git.findTree("HEAD");
+    const items = await git.lsTree("HEAD");
     expect(items).toEqual([
       {
         type: "blob",
@@ -277,9 +277,7 @@ describe("commit", () => {
   });
 
   it("findTree commitHash bf7d5e1bf760080311b120abd258a48627d47df0", async () => {
-    const items = await git.findTree(
-      "bf7d5e1bf760080311b120abd258a48627d47df0"
-    );
+    const items = await git.lsTree("bf7d5e1bf760080311b120abd258a48627d47df0");
     expect(items).toEqual([
       {
         type: "blob",
@@ -297,7 +295,7 @@ describe("commit", () => {
   });
 
   it("findTree commitHash bf7d5e1bf760080311b120abd258a48627d47df0 src/", async () => {
-    const items = await git.findTree(
+    const items = await git.lsTree(
       "bf7d5e1bf760080311b120abd258a48627d47df0",
       "src/"
     );
@@ -311,8 +309,38 @@ describe("commit", () => {
     ]);
   });
 
+  it("ls tree bf7d5e1bf760080311b120abd258a48627d47df0 . commitLog", async () => {
+    const items = await git.lsTree(
+      "bf7d5e1bf760080311b120abd258a48627d47df0",
+      ".",
+      true
+    );
+    expect(items).toEqual([
+      {
+        type: "blob",
+        hash: "ae6c6651aa9f519698cff70276cc799ff894e327",
+        name: "index.html",
+        path: "index.html",
+        commitUser: "Tsdy",
+        commitHash: "5d3886b5e0063cde98f815e87ad31b4bf58c5d15",
+        commitTime: new Date("2022-05-30T10:00:30.000Z"),
+        commitContent: "merge",
+      },
+      {
+        type: "tree",
+        hash: "3a4658f192a502b56e49456691672ec99fe481ab",
+        name: "src",
+        path: "src/",
+        commitUser: "Tsdy",
+        commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
+        commitTime: new Date("2022-07-04T14:21:28.000Z"),
+        commitContent: "add a dir",
+      },
+    ]);
+  });
+
   it("findBlob", async () => {
-    const item = await git.findBlob("HEAD", "index.html");
+    const item = await git.catFile("HEAD", "index.html");
     console.log(item);
     expect(item.value.replace(/[ |\n]/gs, "")).toBe(
       `<html></html><body></body>`

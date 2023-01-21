@@ -7,6 +7,10 @@ import { parseLanguageAfterFix } from "./language";
 
 export * from "./language";
 
+class ExitException extends Error {
+  code: number | null = null;
+}
+
 export class Git {
   private repoPath: string;
 
@@ -23,11 +27,14 @@ export class Git {
     });
     child.on("exit", (code) => {
       if (code !== 0) {
-        reject(code);
+        const error = new ExitException(errorStr);
+        error.code = code;
+        reject(error);
       }
     });
+    let errorStr = "";
     child.stderr.on("data", (err) => {
-      console.error(err.toString());
+      errorStr += err;
     });
   }
 
@@ -390,37 +397,108 @@ export class Git {
     );
   }
 
+  public findCommitByPath(branchName: string, path: string) {
+    const argvs: string[] = [
+      "log",
+      branchName,
+      "-1",
+      "--format={@}%cN{@}%ci{@}%H{@}%T{@}%B{@}",
+      "--date=iso8601-strict",
+      "--",
+      path,
+    ];
+    return this.spawn<Commit>(argvs, (data, resolve, reject) => {
+      const match = data.match(
+        /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
+      );
+      if (match) {
+        const result: Commit = {
+          username: match[1], // 提交者名称
+          time: new Date(match[2]), // 提交时间
+          commitHash: match[3],
+          treeHash: match[4],
+          comment: match[5],
+        };
+        resolve(result);
+      } else {
+        reject("not info");
+      }
+    });
+  }
+
   // 这个hash可以是commitHash，treeHash，分支名。
   // hash决定了本次查询的root path
   // path eg.. src/ or src/index.html or index.html not has ./
   // 这里root根目录必须使用path=.否则 fatal: empty string is not a valid pathspec. please use . instead if you meant to match all paths
-  public findTree(hash: string, path?: string) {
+  public lsTree(
+    hash: string,
+    path: string | undefined,
+    hasCommit: true
+  ): Promise<Required<TreeItem>[]>;
+  public lsTree(
+    hash: string,
+    path: string | undefined,
+    hasCommit: undefined | false
+  ): Promise<TreeItem[]>;
+  public lsTree(
+    hash: string,
+    path?: string,
+    hasCommit?: false
+  ): Promise<TreeItem[]>;
+  public lsTree(hash: string, path: string = ".", hasCommit: boolean = false) {
     // 如果path不存在就不放入数组可以避免这个问题
     const argvs: string[] = ["ls-tree", hash];
     if (path) {
       argvs.push(path);
     }
-    return this.spawn<TreeItem[]>(argvs, (data, resolve, reject) => {
-      const items: TreeItem[] = [];
-      data.split("\n").forEach((item) => {
-        if (item) {
-          const array = item.split(" ");
-          const hashOrPath = array[2].split("\t");
-          const it = {
-            type: array[1] as "blob" | "tree",
-            hash: hashOrPath[0],
-            name: hashOrPath[1].replace(new RegExp(`^${path ? path : ""}`), ""),
-            // 如果是tree，后面加一个/，这样用这个path就可以直接调用findTree获得path下的treelist
-            path: array[1] === "blob" ? hashOrPath[1] : hashOrPath[1] + "/",
-          };
-          items.push(it);
+    return this.spawn<TreeItem[] | Required<TreeItem>[]>(
+      argvs,
+      (data, resolve, reject) => {
+        const items: TreeItem[] = [];
+        data.split("\n").forEach((item) => {
+          if (item) {
+            const array = item.split(" ");
+            const hashOrPath = array[2].split("\t");
+            const it = {
+              type: array[1] as "blob" | "tree",
+              hash: hashOrPath[0],
+              name: hashOrPath[1].replace(
+                new RegExp(`^${path !== "." ? path : ""}`),
+                ""
+              ),
+              // 如果是tree，后面加一个/，这样用这个path就可以直接调用findTree获得path下的treelist
+              path: array[1] === "blob" ? hashOrPath[1] : hashOrPath[1] + "/",
+            };
+            items.push(it);
+          }
+        });
+        if (hasCommit) {
+          Promise.all(
+            items.map((item) => this.findCommitByPath(hash, item.path))
+          )
+            .then((res) => {
+              const requiredItems: Required<TreeItem>[] = res.map(
+                (o, index) => {
+                  return {
+                    commitUser: o.username,
+                    commitHash: o.commitHash,
+                    commitTime: o.time,
+                    commitContent: o.comment,
+                    ...items[index],
+                  };
+                }
+              );
+              resolve(requiredItems);
+            })
+            .catch((err) => reject(err));
+        } else {
+          resolve(items);
         }
-      });
-      resolve(items);
-    });
+      }
+    );
   }
 
-  public findBlob(hash: string, path: string) {
+  public catFile(hash: string, path: string) {
     return this.spawnPipeEnd<{ size: number; value: string }>(
       `${hash}:${path}`,
       ["cat-file", "--batch=%(objectsize)"],
@@ -439,83 +517,5 @@ export class Git {
     return this.spawn<void>(["init", "--bare"], (data, resolve, reject) => {
       resolve(void 0);
     });
-  }
-
-  public async findCommitInfoByTree(tree: TreeItem[]) {
-    const map: Map<string, TreeItem> = new Map();
-    tree.forEach((treeItem) => {
-      if (treeItem.type === "blob") {
-        map.set(treeItem.path, treeItem);
-      } else {
-        // TreeItem中type="tree"时，会在path末尾加一个/，方便再次调用findTree
-        // 这为了匹配git log --raw，需要吧/删除。
-        map.set(treeItem.path.replace(/\/$/, ""), treeItem);
-      }
-    });
-    return this.spawn(
-      [
-        "log",
-        "--format={@}%cN{@}%ci{@}%H{@}%T{@}%B{@}{end}",
-        "--raw",
-        "-t",
-        "-c",
-        "--name-status",
-        "--",
-        ...tree.map((item) => item.path),
-      ],
-      (data, resolve, reject) => {
-        const result: Array<TreeItem | Commit> = [];
-        const commitInfoList = (
-          data.match(
-            /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}\{end\}/gs
-          ) || []
-        ).map((raw) => {
-          const match = raw.match(
-            /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
-          );
-          if (match) {
-            const log = {
-              username: match[1], // 提交者名称
-              time: new Date(match[2]), // 提交时间
-              commitHash: match[3],
-              treeHash: match[4],
-              comment: match[5],
-            };
-            return log;
-          }
-        });
-        data
-          .split(/\{@\}.*?\{@\}.*?\{@\}.*?\{@\}.*?\{@\}.*?\n\{@\}\{end\}/s)
-          .slice(1)
-          .forEach((raw, index) => {
-            if (!raw) {
-              return;
-            }
-            const commit = commitInfoList[index];
-            if (!commit) {
-              return;
-            }
-            raw.split("\n").forEach((item) => {
-              const type = item.slice(0, 2).trim();
-              let path = "";
-              if (type.length === 1) {
-                path = item.slice(2);
-              } else if (type.length === 2) {
-                path = item.slice(3);
-              }
-              if (type !== "D") {
-                if (map.has(path)) {
-                  result.push({
-                    ...map.get(path),
-                    ...commit,
-                  });
-                  map.delete(path);
-                }
-              }
-            });
-          });
-        resolve(result);
-      }
-    );
   }
 }

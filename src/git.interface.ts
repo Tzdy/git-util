@@ -34,4 +34,8 @@ export interface TreeItem {
   hash: string;
   name: string;
   path: string;
+  commitHash?: string;
+  commitContent?: string;
+  commitUser?: string;
+  commitTime?: Date;
 }
