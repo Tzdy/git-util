@@ -1,8 +1,10 @@
 import { Git } from "./git";
+import "./language";
 const git = new Git(
   "/Users/mac/Documents/web/server/gogs/ty-git",
   "gitrepo.git"
 );
+
 // git
 //   .findBlob("ae6c6651aa9f519698cff70276cc799ff894e327")
 //   .then((res) => {
@@ -35,12 +37,13 @@ async function main() {
   // console.log(list);
   // console.log(await git.findDiffItem(list));
   // await git.createDirAndInitBare();
-  const tree = await git.lsTree(
-    "bf7d5e1bf760080311b120abd258a48627d47df0",
-    ".",
-    true
-  );
-  console.log(tree);
+  // const tree = await git.lsTree(
+  //   "bf7d5e1bf760080311b120abd258a48627d47df0",
+  //   ".",
+  //   true
+  // );
+  // console.log(tree);
+  console.log(Buffer.from("\n", "utf-8")[1]);
 }
 
 main();

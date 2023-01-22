@@ -3,7 +3,7 @@ import { mkdir } from "fs/promises";
 import { join } from "path";
 import { Readable } from "stream";
 import { Branch, Commit, Head, Item, TreeItem } from "./git.interface";
-import { parseLanguageAfterFix } from "./language";
+import { parseFilename, parseLanguageAfterFix } from "./language";
 
 export * from "./language";
 
@@ -377,7 +377,18 @@ export class Git {
           if (item.itemType === "tree") {
             return;
           }
-          const afterFixArr = item.path.split("/").pop()?.split(".");
+          const filename = item.path.split("/").pop();
+          if (filename) {
+            const lang = parseFilename(filename);
+            if (lang) {
+              item.langId = lang.languageId;
+              return;
+            }
+          } else {
+            return;
+          }
+
+          const afterFixArr = filename.split(".");
           if (!afterFixArr) {
             return;
           }
