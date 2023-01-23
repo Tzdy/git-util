@@ -5,7 +5,7 @@ const REPO_NAME = "gitrepo";
 const git = new Git(ROOT_PATH, REPO_NAME);
 describe("display and switch branch", () => {
   it("find all branch", async () => {
-    const result = await git.findBranch();
+    const result = await git.showRef();
     expect(result).toEqual([
       {
         name: "master",
@@ -14,6 +14,16 @@ describe("display and switch branch", () => {
       {
         name: "dev",
         latestCommit: "71ab32d443c4cb5d0ffeffeda931bea741b4957f",
+      },
+    ]);
+  });
+
+  it("find all tag", async () => {
+    const result = await git.showRef(true);
+    expect(result).toEqual([
+      {
+        name: "v1",
+        latestCommit: "c710c2262d6e8916ea832c1c9846deded5ab034b",
       },
     ]);
   });

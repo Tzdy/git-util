@@ -159,10 +159,10 @@ export class Git {
     });
   }
 
-  public findBranch() {
+  public showRef(isTag?: boolean) {
     const result: Array<Branch> = [];
     return this.spawn<Array<Branch>>(
-      ["show-ref", "--heads"],
+      ["show-ref", isTag ? "--tags" : "--heads"],
       (data, resolve, reject) => {
         // 可能出现空仓库
         if (data.length !== 0) {
@@ -170,10 +170,15 @@ export class Git {
           array.forEach((item) => {
             if (item) {
               const sub = item.split(" ");
-              const branchName = sub[1].replace(/^refs\/heads\//, "");
+              let name: string = "";
+              if (isTag) {
+                name = sub[1].replace(/^refs\/tags\//, "");
+              } else {
+                name = sub[1].replace(/^refs\/heads\//, "");
+              }
               const latestCommit = sub[0];
               result.unshift({
-                name: branchName,
+                name,
                 latestCommit,
               });
             }
