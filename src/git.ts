@@ -44,6 +44,15 @@ export class Git {
     });
   }
 
+  private spawnIgnoreExitCode(argvs: Array<string>): Promise<void>;
+  private spawnIgnoreExitCode<T>(
+    argvs: Array<string>,
+    fn?: (
+      data: string,
+      resolve: (value: T) => void,
+      reject: (reason: any) => void
+    ) => void
+  ): Promise<T>;
   private spawnIgnoreExitCode<T>(
     argvs: Array<string>,
     fn?: (
