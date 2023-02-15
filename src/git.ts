@@ -21,20 +21,54 @@ export class Git {
     this.repoPath = join(rootPath, repoName);
   }
 
-  private exception(child: ChildProcessWithoutNullStreams, reject: Function) {
+  private exception(
+    child: ChildProcessWithoutNullStreams,
+    reject: Function,
+    ignoreExitCode: boolean = false
+  ) {
     child.on("error", (err) => {
       reject(err);
     });
-    child.on("exit", (code) => {
-      if (code !== 0) {
-        const error = new ExitException(errorStr);
-        error.code = code;
-        reject(error);
-      }
-    });
+    if (!ignoreExitCode) {
+      child.on("exit", (code) => {
+        if (code !== 0) {
+          const error = new ExitException(errorStr);
+          error.code = code;
+          reject(error);
+        }
+      });
+    }
     let errorStr = "";
     child.stderr.on("data", (err) => {
       errorStr += err;
+    });
+  }
+
+  private spawnIgnoreExitCode<T>(
+    argvs: Array<string>,
+    fn?: (
+      data: string,
+      resolve: (value: T) => void,
+      reject: (reason: any) => void
+    ) => void
+  ) {
+    return new Promise<T | undefined>((resolve, reject) => {
+      let data = "";
+      const child = spawn("git", argvs, {
+        cwd: this.repoPath,
+      });
+      this.exception(child, reject, true);
+      child.stdout.on("data", (buffer) => {
+        data += buffer.toString("utf-8");
+      });
+      child.on("close", () => {
+        if (fn) {
+          // 由于需要按照\n切割字符串，所以清除最后一个\n
+          fn(data.replace(/\n$/, ""), resolve, reject);
+        } else {
+          resolve(void 0);
+        }
+      });
     });
   }
 
@@ -161,7 +195,8 @@ export class Git {
 
   public showRef(isTag?: boolean) {
     const result: Array<Branch> = [];
-    return this.spawn<Array<Branch>>(
+    // 如果没有tag或branch。spawn的exit会返回code1.所以这里需要忽略code。
+    return this.spawnIgnoreExitCode<Array<Branch>>(
       ["show-ref", isTag ? "--tags" : "--heads"],
       (data, resolve, reject) => {
         // 可能出现空仓库

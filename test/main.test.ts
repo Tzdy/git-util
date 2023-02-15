@@ -2,7 +2,9 @@ import { Git } from "@/git";
 import { resolve } from "path";
 const ROOT_PATH = resolve();
 const REPO_NAME = "gitrepo";
+const NOT_TAG_REPO_NAME = "not-tag";
 const git = new Git(ROOT_PATH, REPO_NAME);
+const notTagGit = new Git(ROOT_PATH, NOT_TAG_REPO_NAME);
 describe("display and switch branch", () => {
   it("find all branch", async () => {
     const result = await git.showRef();
@@ -26,6 +28,11 @@ describe("display and switch branch", () => {
         latestCommit: "c710c2262d6e8916ea832c1c9846deded5ab034b",
       },
     ]);
+  });
+
+  it("find not tag", async () => {
+    const result = await notTagGit.showRef(true);
+    expect(result).toEqual([]);
   });
 
   it("switch branch master", async () => {
