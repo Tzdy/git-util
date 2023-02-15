@@ -57,6 +57,11 @@ describe("commit", () => {
     expect(await git.findHead()).toEqual({ name: "master", type: "commit" });
   });
 
+  it("not find commit", async () => {
+    const commits = await git.findCommit("apple");
+    expect(commits).toEqual([]);
+  });
+
   it("find commits", async () => {
     const commits = await git.findCommit("master");
     expect(commits).toEqual([

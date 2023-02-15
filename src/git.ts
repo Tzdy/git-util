@@ -259,8 +259,12 @@ export class Git {
     branchName: string,
     page?: number,
     limit?: number,
-    commitHashList?: Array<string>
+    commitHashList?: Array<string>,
+    path?: string
   ) {
+    if (!path) {
+      path = ".";
+    }
     const argvs: string[] = [
       "log",
       "--format={@}%cN{@}%ci{@}%H{@}%T{@}%B{@}{end}",
@@ -279,32 +283,36 @@ export class Git {
       // 分支名相当于对应分支顶层的commithash。
       argvs.push(branchName);
     }
-    return this.spawn<Array<Commit>>(argvs, (data, resolve, reject) => {
-      const result: Array<Commit> = [];
-      const array = data.split("{end}");
-      array.forEach((item) => {
-        if (item) {
-          /*
+    argvs.push("--", path);
+    return this.spawnIgnoreExitCode<Array<Commit>>(
+      argvs,
+      (data, resolve, reject) => {
+        const result: Array<Commit> = [];
+        const array = data.split("{end}");
+        array.forEach((item) => {
+          if (item) {
+            /*
             这个是正则匹配的原始字符串。
             {@}Tsdy{@}2022-05-30 18:00:30 +0800{@}5d3886b{@}79be2f0{@}merge
             {@}{end} 
             */
-          const match = item.match(
-            /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
-          );
-          if (match) {
-            result.push({
-              username: match[1], // 提交者名称
-              time: new Date(match[2]), // 提交时间
-              commitHash: match[3],
-              treeHash: match[4],
-              comment: match[5],
-            });
+            const match = item.match(
+              /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
+            );
+            if (match) {
+              result.push({
+                username: match[1], // 提交者名称
+                time: new Date(match[2]), // 提交时间
+                commitHash: match[3],
+                treeHash: match[4],
+                comment: match[5],
+              });
+            }
           }
-        }
-      });
-      resolve(result);
-    });
+        });
+        resolve(result);
+      }
+    );
   }
 
   public findAllCommitHash(branchName: string) {
