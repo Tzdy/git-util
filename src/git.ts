@@ -476,8 +476,9 @@ export class Git {
       path,
     ];
     return this.spawn<Commit>(argvs, (data, resolve, reject) => {
+      // %B那里结尾处可能会有个\n，怀疑是commit的时候按回车捕获了。
       const match = data.match(
-        /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\n\{@\}/s
+        /\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}(.*?)\{@\}/s
       );
       if (match) {
         const result: Commit = {

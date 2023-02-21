@@ -346,7 +346,7 @@ describe("commit", () => {
         commitUser: "Tsdy",
         commitHash: "5d3886b5e0063cde98f815e87ad31b4bf58c5d15",
         commitTime: new Date("2022-05-30T10:00:30.000Z"),
-        commitContent: "merge",
+        commitContent: "merge\n",
       },
       {
         type: "tree",
@@ -356,7 +356,7 @@ describe("commit", () => {
         commitUser: "Tsdy",
         commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
         commitTime: new Date("2022-07-04T14:21:28.000Z"),
-        commitContent: "add a dir",
+        commitContent: "add a dir\n",
       },
     ]);
   });
