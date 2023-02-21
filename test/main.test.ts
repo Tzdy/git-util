@@ -311,15 +311,15 @@ describe("commit", () => {
         type: "tree",
         hash: "3a4658f192a502b56e49456691672ec99fe481ab",
         name: "src",
-        path: "src/",
+        path: "src",
       },
     ]);
   });
 
-  it("findTree commitHash bf7d5e1bf760080311b120abd258a48627d47df0 src/", async () => {
+  it("findTree commitHash bf7d5e1bf760080311b120abd258a48627d47df0 src", async () => {
     const items = await git.lsTree(
       "bf7d5e1bf760080311b120abd258a48627d47df0",
-      "src/"
+      "src"
     );
     expect(items).toEqual([
       {
@@ -334,7 +334,7 @@ describe("commit", () => {
   it("ls tree bf7d5e1bf760080311b120abd258a48627d47df0 . commitLog", async () => {
     const items = await git.lsTree(
       "bf7d5e1bf760080311b120abd258a48627d47df0",
-      ".",
+      "",
       true
     );
     expect(items).toEqual([
@@ -352,7 +352,7 @@ describe("commit", () => {
         type: "tree",
         hash: "3a4658f192a502b56e49456691672ec99fe481ab",
         name: "src",
-        path: "src/",
+        path: "src",
         commitUser: "Tsdy",
         commitHash: "bf7d5e1bf760080311b120abd258a48627d47df0",
         commitTime: new Date("2022-07-04T14:21:28.000Z"),

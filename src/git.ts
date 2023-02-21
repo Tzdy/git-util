@@ -497,8 +497,7 @@ export class Git {
 
   // 这个hash可以是commitHash，treeHash，分支名。
   // hash决定了本次查询的root path
-  // path eg.. src/ or src/index.html or index.html not has ./
-  // 这里root根目录必须使用path=.否则 fatal: empty string is not a valid pathspec. please use . instead if you meant to match all paths
+  // path eg.. src or src/index.html or index.html not has ./
   public lsTree(
     hash: string,
     path: string | undefined,
@@ -514,11 +513,13 @@ export class Git {
     path?: string,
     hasCommit?: false
   ): Promise<TreeItem[]>;
-  public lsTree(hash: string, path: string = ".", hasCommit: boolean = false) {
+  public lsTree(hash: string, path: string = "", hasCommit: boolean = false) {
     // 如果path不存在就不放入数组可以避免这个问题
-    const argvs: string[] = ["ls-tree", hash];
+    const argvs: string[] = ["ls-tree"];
     if (path) {
-      argvs.push(path);
+      argvs.push(`${hash}:${path}`);
+    } else {
+      argvs.push(hash);
     }
     return this.spawn<TreeItem[] | Required<TreeItem>[]>(
       argvs,
@@ -535,8 +536,7 @@ export class Git {
                 new RegExp(`^${path !== "." ? path : ""}`),
                 ""
               ),
-              // 如果是tree，后面加一个/，这样用这个path就可以直接调用findTree获得path下的treelist
-              path: array[1] === "blob" ? hashOrPath[1] : hashOrPath[1] + "/",
+              path: join(path, hashOrPath[1]),
             };
             items.push(it);
           }
